@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics: {{ data.bbl }} - NYC Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+        
+        .header-meta {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            font-size: 1.1em;
+        }
+        
+        .nav-bar {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .nav-links a {
+            color: #667eea;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: 600;
+        }
+        
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .bookmark-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .bookmark-btn:hover {
+            background: #764ba2;
+        }
+        
+        .bookmark-btn.bookmarked {
+            background: #28a745;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .complaint-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .complaint-item {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .complaint-item:last-child {
+            border-bottom: none;
+        }
+        
+        .complaint-name {
+            font-weight: 600;
+            color: #333;
+            flex: 1;
+        }
+        
+        .complaint-stats {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .count-badge {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        
+        .closed-rate {
+            color: #28a745;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        
+        .property-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .property-info div {
+            margin: 8px 0;
+            color: #555;
+        }
+        
+        .property-info strong {
+            color: #333;
+            display: inline-block;
+            min-width: 150px;
+        }
+        
+        .sales-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .sales-table th,
+        .sales-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .sales-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .export-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
+            margin-right: 10px;
+            transition: all 0.3s;
+        }
+        
+        .export-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .trends-toggle {
+            margin: 20px 0;
+        }
+        
+        .toggle-btn {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 10px;
+            transition: all 0.3s;
+        }
+        
+        .toggle-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .chart-container {
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .chart-container.active {
+            display: block;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-meta {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>BBL {{ data.bbl }}</h1>
+            <div class="header-meta">
+                <span>{{ data.borough_name }}</span>
+                <span>{{ start_date }} to {{ end_date }}</span>
+            </div>
+        </div>
+        
+        <div class="nav-bar">
+            <div class="nav-links">
+                <a href="/">← Home</a>
+                <a href="/bookmarks">Bookmarks</a>
+                <a href="/compare?bbl1={{ data.bbl }}&start_date={{ start_date }}&end_date={{ end_date }}">Compare</a>
+            </div>
+            <button class="bookmark-btn {% if is_bookmarked %}bookmarked{% endif %}" 
+                    onclick="toggleBookmark('{{ data.bbl }}')">
+                {% if is_bookmarked %}
+                    ✓ Bookmarked (Click to Remove)
+                {% else %}
+                    + Add Bookmark
+                {% endif %}
+            </button>
+        </div>
+        
+        <!-- Statistics Overview -->
+        <div class="grid">
+            <div class="card">
+                <h2>Service Requests</h2>
+                <div class="stat-box">
+                    <div class="stat-number">{{ '{:,}'.format(data.total_requests) }}</div>
+                    <div class="stat-label">Total Requests</div>
+                </div>
+                <div class="stat-box" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    <div class="stat-number">{{ '{:,}'.format(data.total_active) }}</div>
+                    <div class="stat-label">Active Requests</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Property Sales</h2>
+                <div class="stat-box" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);">
+                    <div class="stat-number">{{ '{:,}'.format(data.num_sales) }}</div>
+                    <div class="stat-label">Total Sales</div>
+                </div>
+                {% if data.num_sales > 0 %}
+                <div class="stat-box" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    <div class="stat-number">${{ '{:,.0f}'.format(data.median_sale_price) }}</div>
+                    <div class="stat-label">Median Sale Price</div>
+                </div>
+                <div style="margin-top: 15px; color: #666;">
+                    <div><strong>Min:</strong> ${{ '{:,.0f}'.format(data.min_sale_price) }}</div>
+                    <div><strong>Max:</strong> ${{ '{:,.0f}'.format(data.max_sale_price) }}</div>
+                </div>
+                {% else %}
+                <div class="no-data">No sales data for this period</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Complaints by Type -->
+        <div class="card">
+            <h2>Service Requests by Complaint Type</h2>
+            {% if data.complaint_types %}
+                <button class="export-btn" onclick="exportCSV('{{ data.bbl }}', 'complaints', '{{ start_date }}', '{{ end_date }}')">
+                    Export as CSV
+                </button>
+                
+                <div style="max-width: 600px; margin: 30px auto;">
+                    <canvas id="complaintPieChart"></canvas>
+                </div>
+                
+                <div class="complaint-list" style="margin-top: 30px;">
+                    {% for ct in data.complaint_types %}
+                    <div class="complaint-item">
+                        <div class="complaint-name">{{ ct.type }}</div>
+                        <div class="complaint-stats">
+                            <span class="count-badge">{{ ct.count }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="no-data">No service requests for this location in the selected period</div>
+            {% endif %}
+        </div>
+        
+        <!-- Sales Details -->
+        {% if data.sales %}
+        <div class="card">
+            <h2>Recent Property Sales</h2>
+            <button class="export-btn" onclick="exportCSV('{{ data.bbl }}', 'sales', '{{ start_date }}', '{{ end_date }}')">
+                Export as CSV
+            </button>
+            
+            <table class="sales-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Address</th>
+                        <th>Sale Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in data.sales[:10] %}
+                    <tr>
+                        <td>{{ sale.date }}</td>
+                        <td>{{ sale.address }}</td>
+                        <td>${{ '{:,.0f}'.format(sale.price) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% if data.sales|length > 10 %}
+            <p style="color: #666; margin-top: 10px; font-style: italic;">
+                Showing 10 of {{ data.sales|length }} total sales
+            </p>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Trends Section -->
+        <div class="card">
+            <h2>Trends Over Time</h2>
+            <div class="trends-toggle">
+                <button class="toggle-btn active" onclick="showTrendsType('service_requests')">Service Requests</button>
+                <button class="toggle-btn" onclick="showTrendsType('sales')">Property Sales</button>
+            </div>
+            
+            <div id="service-requests-trends" class="chart-container active">
+                <canvas id="serviceRequestsTrendsChart"></canvas>
+            </div>
+            
+            <div id="property-sales-trends" class="chart-container">
+                <canvas id="propertySalesTrendsChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let serviceRequestsTrendsChart = null;
+        let propertySalesTrendsChart = null;
+        let complaintPieChart = null;
+        
+        // Load trends data on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            loadTrendsData('{{ data.bbl }}', 'service_requests', '{{ start_date }}', '{{ end_date }}');
+            loadTrendsData('{{ data.bbl }}', 'sales', '{{ start_date }}', '{{ end_date }}');
+            renderComplaintPieChart();
+        });
+        
+        function toggleBookmark(bbl) {
+            fetch(`/bookmark/${bbl}`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    location.reload();
+                });
+        }
+        
+        function exportCSV(bbl, type, startDate, endDate) {
+            window.location.href = `/export/${bbl}?type=${type}&start_date=${startDate}&end_date=${endDate}`;
+        }
+        
+        function renderComplaintPieChart() {
+            const canvas = document.getElementById('complaintPieChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (complaintPieChart) {
+                complaintPieChart.destroy();
+            }
+            
+            // Get data from template - Flask auto-converts Python list to JavaScript array
+            const complaintData = [
+                {% for ct in complaint_data %}
+                    {type: "{{ ct.type }}", count: {{ ct.count }} }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ];
+            
+            if (!complaintData || complaintData.length === 0) return;
+            
+            // Pie chart colors
+            const colors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                '#9966FF', '#FF9F40'
+            ];
+            
+            complaintPieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: complaintData.map(d => d.type),
+                    datasets: [{
+                        data: complaintData.map(d => d.count),
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Distribution by Complaint Type'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return context.label + ': ' + value + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function showTrendsType(type) {
+            const container = event.target.closest('.card');
+            const buttons = container.querySelectorAll('.toggle-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (type === 'service_requests') {
+                document.getElementById('service-requests-trends').classList.add('active');
+                document.getElementById('property-sales-trends').classList.remove('active');
+            } else {
+                document.getElementById('service-requests-trends').classList.remove('active');
+                document.getElementById('property-sales-trends').classList.add('active');
+            }
+        }
+        
+        function loadTrendsData(bbl, type, startDate, endDate) {
+            fetch(`/trends/${bbl}?type=${type}&start_date=${startDate}&end_date=${endDate}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (type === 'service_requests') {
+                        renderServiceRequestsTrends(data);
+                    } else {
+                        renderPropertySalesTrends(data);
+                    }
+                });
+        }
+        
+        function renderServiceRequestsTrends(data) {
+            const ctx = document.getElementById('serviceRequestsTrendsChart').getContext('2d');
+            
+            if (serviceRequestsTrendsChart) {
+                serviceRequestsTrendsChart.destroy();
+            }
+            
+            // Check if there's data to display
+            if (!data || data.length === 0) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#999';
+                ctx.textAlign = 'center';
+                ctx.fillText('No service request data for this time period', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                return;
+            }
+            
+            serviceRequestsTrendsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.month),
+                    datasets: [{
+                        label: 'Service Requests',
+                        data: data.map(d => d.count),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        },
+                        title: {
+                            display: true,
+                            text: 'Service Requests Over Time'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'category',
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                precision: 0,
+                                maxTicksLimit: 8
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderPropertySalesTrends(data) {
+            const ctx = document.getElementById('propertySalesTrendsChart').getContext('2d');
+            
+            if (propertySalesTrendsChart) {
+                propertySalesTrendsChart.destroy();
+            }
+            
+            // Check if there's data to display
+            if (!data || data.length === 0) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#999';
+                ctx.textAlign = 'center';
+                ctx.fillText('No property sales data for this time period', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                return;
+            }
+            
+            propertySalesTrendsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.month),
+                    datasets: [{
+                        label: 'Median Sale Price',
+                        data: data.map(d => d.median_price),
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        spanGaps: true  // Connect line across null values
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        },
+                        title: {
+                            display: true,
+                            text: 'Median Property Sale Price Over Time'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'category',
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

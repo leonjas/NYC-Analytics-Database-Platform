@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC 311 & Property Analytics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 50px;
+            max-width: 700px;
+            width: 100%;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .search-box {
+            margin-bottom: 30px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        
+        input[type="text"],
+        input[type="date"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        input[type="text"]:focus,
+        input[type="date"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .date-filters {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .hint {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .links {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #f0f0f0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .links a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        
+        .links a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+        
+        .example {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        
+        .example strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>NYC Analytics</h1>
+        <p class="subtitle">311 Service Requests & Property Sales Dashboard</p>
+        
+        <form action="/search" method="POST">
+            <div class="search-box">
+                <label for="house_number">House Number</label>
+                <input 
+                    type="text" 
+                    id="house_number" 
+                    name="house_number" 
+                    placeholder="e.g., 120"
+                    required
+                >
+            </div>
+            
+            <div class="search-box">
+                <label for="street">Street Name</label>
+                <input 
+                    type="text" 
+                    id="street" 
+                    name="street" 
+                    placeholder="e.g., BROADWAY"
+                    required
+                >
+            </div>
+            
+            <div class="search-box">
+                <label for="borough">Borough</label>
+                <select 
+                    id="borough" 
+                    name="borough"
+                    required
+                    style="width: 100%; padding: 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1em; font-family: inherit;"
+                >
+                    <option value="">Select a borough...</option>
+                    <option value="Manhattan">Manhattan</option>
+                    <option value="Brooklyn">Brooklyn</option>
+                    <option value="Queens">Queens</option>
+                    <option value="Bronx">Bronx</option>
+                    <option value="Staten Island">Staten Island</option>
+                </select>
+                <div class="hint">Select the NYC borough</div>
+            </div>
+            
+            <div class="date-filters">
+                <div>
+                    <label for="start_date">Start Date (Optional)</label>
+                    <input type="date" id="start_date" name="start_date">
+                </div>
+                <div>
+                    <label for="end_date">End Date (Optional)</label>
+                    <input type="date" id="end_date" name="end_date">
+                </div>
+            </div>
+            <div class="hint">Leave blank for default (all of 2024)</div>
+            
+            <button type="submit">Search</button>
+        </form>
+    </div>
+</body>
+</html>
