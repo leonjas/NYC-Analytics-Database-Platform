@@ -1,9 +1,8 @@
-# Large CSV data files
-311_Service_Requests.csv
-311_Service_Requests_cleaned.csv
-service_request.csv
-2024_combined_boroughs.csv
-property_sales_cleaned.csv
+# Data files - already in Google Cloud database
+*.csv
+*.sql
+clean_csv_files.py
+DATA_PIPELINE_SUMMARY.md
 
 # Python
 __pycache__/
