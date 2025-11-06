@@ -40,7 +40,7 @@ DATABASE_PASSWRD = "493592"
 DATABASE_HOST = "34.139.8.30"
 DATABASEURI = f"postgresql://{DATABASE_USERNAME}:{DATABASE_PASSWRD}@{DATABASE_HOST}/proj1part2"
 
-engine = create_engine(DATABASEURI)
+engine = create_engine(DATABASEURI, poolclass=NullPool)
 
 
 @app.before_request
@@ -260,7 +260,7 @@ def get_bbl_data(borough_code, block_code, lot_code, start_date=None, end_date=N
 
 def get_time_series_data(borough_code, block_code, lot_code, start_date, end_date, metric_type):
 	"""
-	Get time-series data (service_requests, sales) for trends view
+	Get monthly time-series data for charts
 	"""
 	geo_query = """
 		SELECT geographic_id FROM Geographic_Area 
@@ -279,7 +279,6 @@ def get_time_series_data(borough_code, block_code, lot_code, start_date, end_dat
 	
 	geographic_id = geo_row[0]
 	
-	# Time series for service requests or sales
 	if metric_type == 'service_requests':
 		query = """
 			SELECT DATE_TRUNC('month', created_date) as month, COUNT(*) as count
@@ -290,7 +289,7 @@ def get_time_series_data(borough_code, block_code, lot_code, start_date, end_dat
 			GROUP BY DATE_TRUNC('month', created_date)
 			ORDER BY month
 		"""
-	elif metric_type == 'sales':  
+	else:
 		query = """
 			SELECT DATE_TRUNC('month', s.sale_date) as month, 
 			       PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY s.sale_price) as median_price,
@@ -310,35 +309,39 @@ def get_time_series_data(borough_code, block_code, lot_code, start_date, end_dat
 		'end_date': end_date
 	})
 	
-	data_by_month = {}
+	data_dict = {}
 	for row in cursor:
 		month = row[0].strftime('%Y-%m')
 		if metric_type == 'service_requests':
-			data_by_month[month] = row[1]
-		elif metric_type == 'sales':
-			data_by_month[month] = float(row[1])
+			data_dict[month] = {'count': row[1]}
+		else:
+			data_dict[month] = {'median_price': float(row[1]), 'count': row[2]}
 	cursor.close()
 	
 	start = datetime.strptime(start_date, '%Y-%m-%d')
 	end = datetime.strptime(end_date, '%Y-%m-%d')
-
-	results = []
+	
+	all_months = []
 	current = start
 	while current <= end:
-		month = current.strftime('%Y-%m')
-		if metric_type == 'service_requests':
-			results.append({'month': month, 'count': data_by_month.get(month, 0)})
-		elif metric_type == 'sales':
-			median = data_by_month.get(month)
-			results.append({'month': month, 'median_price': median, 'count': 1 if median else 0})
-		
+		all_months.append(current.strftime('%Y-%m'))
 		if current.month == 12:
 			current = current.replace(year=current.year + 1, month=1)
 		else:
 			current = current.replace(month=current.month + 1)
 	
+	results = []
+	for month_str in all_months:
+		if month_str in data_dict:
+			result = {'month': month_str}
+			result.update(data_dict[month_str])
+			results.append(result)
+		elif metric_type == 'service_requests':
+			results.append({'month': month_str, 'count': 0})
+		else:
+			results.append({'month': month_str, 'median_price': None, 'count': 0})
+	
 	return results
-
 
 
 @app.route('/')
@@ -385,9 +388,6 @@ def analytics(bbl):
 	Service requests and property sales dashboard with time filtering for a specific BBL
 	"""
 	bbl_parsed = parse_bbl(bbl)
-	if not bbl_parsed:
-		abort(400, "Invalid BBL format. Use format: borough-block-lot (e.g., 1-100-10)")
-	
 	start_date = request.args.get('start_date', '')
 	end_date = request.args.get('end_date', '')
 	
@@ -420,193 +420,70 @@ def analytics(bbl):
 	else:
 		chart_data = complaint_types
 	
+	# Get first address for compare pre-fill
+	first_address = ''
+	if data['sales']:
+		first_address = data['sales'][0]['address']
+	
 	return render_template("analytics.html", 
 	                      data=data,
 	                      start_date=start_date,
 	                      end_date=end_date,
 	                      is_bookmarked=is_bookmarked,
-	                      complaint_data=chart_data)
+	                      complaint_data=chart_data,
+	                      first_address=first_address)
 
 
-# Query parameters in GET requests
-# Reference: https://flask.palletsprojects.com/en/2.3.x/quickstart/#accessing-request-data
 @app.route('/compare', methods=['GET', 'POST'])
 def compare():
 	"""
-	Side-by-side comparison of two addresses
+	Compare data summary for two properties
 	"""
-	# Get bbl1 and dates from query params (from analytics page link)
-	bbl1_param = request.args.get('bbl1', '') if request.method == 'GET' else None
-	start_date_param = request.args.get('start_date', '')
-	end_date_param = request.args.get('end_date', '')
-	
-	# Parse bbl1 to get address info if provided
-	bbl1_info = None
-	if bbl1_param:
-		bbl1_parsed = parse_bbl(bbl1_param)
-		if bbl1_parsed:
-			data = get_bbl_data(
-				bbl1_parsed['borough_code'],
-				bbl1_parsed['block_code'],
-				bbl1_parsed['lot_code']
-			)
-			if data:
-				bbl1_info = {
-					'bbl': bbl1_param,
-					'borough_name': data['borough_name']
-				}
-	
-	if request.method == 'POST':
-		# Check if bbl1 was pre-filled
-		bbl1_prefilled = request.form.get('bbl1_prefilled', '').strip()
-		
-		if bbl1_prefilled:
-			# Use pre-filled BBL for address 1
-			bbl1_parsed = parse_bbl(bbl1_prefilled)
-			if not bbl1_parsed:
-				return render_template("compare.html", 
-				                      error="Invalid pre-filled BBL",
-				                      bbl1_info=bbl1_info,
-				                      start_date=start_date_param,
-				                      end_date=end_date_param)
-			
-			# Only need address 2
-			house_number2 = request.form.get('house_number2', '').strip()
-			street2 = request.form.get('street2', '').strip()
-			borough2 = request.form.get('borough2', '').strip()
-			
-			if not all([house_number2, street2, borough2]):
-				return render_template("compare.html", 
-				                      error="Please provide the second address",
-				                      bbl1_info=bbl1_info,
-				                      start_date=start_date_param,
-				                      end_date=end_date_param)
-			
-			# Convert address 2 to BBL
-			bbl_result2 = address_to_bbl_geoclient(house_number2, street2, borough2)
-			if not bbl_result2:
-				return render_template("compare.html", 
-				                      error=f"Address 2 not found: {house_number2} {street2}, {borough2}",
-				                      bbl1_info=bbl1_info,
-				                      start_date=start_date_param,
-				                      end_date=end_date_param)
-			
-			bbl2_parsed = parse_bbl(bbl_result2['bbl'])
-		else:
-			# Get both address inputs
-			house_number1 = request.form.get('house_number1', '').strip()
-			street1 = request.form.get('street1', '').strip()
-			borough1 = request.form.get('borough1', '').strip()
-			
-			house_number2 = request.form.get('house_number2', '').strip()
-			street2 = request.form.get('street2', '').strip()
-			borough2 = request.form.get('borough2', '').strip()
-			
-			if not all([house_number1, street1, borough1, house_number2, street2, borough2]):
-				return render_template("compare.html", 
-				                      error="Please provide both complete addresses",
-				                      bbl1_info=bbl1_info,
-				                      start_date=start_date_param,
-				                      end_date=end_date_param)
-			
-			# Convert addresses to BBLs
-			bbl_result1 = address_to_bbl_geoclient(house_number1, street1, borough1)
-			bbl_result2 = address_to_bbl_geoclient(house_number2, street2, borough2)
-			
-			if not bbl_result1:
-				return render_template("compare.html", 
-				                      error=f"Address 1 not found: {house_number1} {street1}, {borough1}",
-				                      bbl1_info=bbl1_info,
-				                      start_date=start_date_param,
-				                      end_date=end_date_param)
-			if not bbl_result2:
-				return render_template("compare.html", 
-				                      error=f"Address 2 not found: {house_number2} {street2}, {borough2}",
-				                      bbl1_info=bbl1_info,
-				                      start_date=start_date_param,
-				                      end_date=end_date_param)
-			
-			bbl1_parsed = parse_bbl(bbl_result1['bbl'])
-			bbl2_parsed = parse_bbl(bbl_result2['bbl'])
-		
-		# Use provided dates or defaults from params
-		start_date = request.form.get('start_date', start_date_param)
-		end_date = request.form.get('end_date', end_date_param)
-	else:
-		# GET request - show form with pre-filled bbl1 if provided
+	if request.method == 'GET':
+		house_number1 = request.args.get('house_number1', '')
+		street1 = request.args.get('street1', '')
+		borough1 = request.args.get('borough1', '')
+		start_date = request.args.get('start_date', '')
+		end_date = request.args.get('end_date', '')
 		return render_template("compare.html", 
-		                      bbl1_info=bbl1_info,
-		                      start_date=start_date_param,
-		                      end_date=end_date_param)
-	
-	# Set default dates
-	if not end_date:
-		end_date = '2024-12-31'
-	if not start_date:
-		start_date = '2024-01-01'
-	
-	data1 = get_bbl_data(
-		bbl1_parsed['borough_code'],
-		bbl1_parsed['block_code'],
-		bbl1_parsed['lot_code'],
-		start_date,
-		end_date
-	)
-	
-	data2 = get_bbl_data(
-		bbl2_parsed['borough_code'],
-		bbl2_parsed['block_code'],
-		bbl2_parsed['lot_code'],
-		start_date,
-		end_date
-	)
-	
-	if not data1 or not data2:
-		return render_template("compare.html", 
-		                      error="One or both addresses not found in database",
-		                      bbl1_info=bbl1_info,
-		                      start_date=start_date,
+		                      house_number1=house_number1, 
+		                      street1=street1, 
+		                      borough1=borough1,
+		                      start_date=start_date, 
 		                      end_date=end_date)
 	
-	return render_template("compare.html",
-	                      data1=data1,
-	                      data2=data2,
-	                      start_date=start_date,
-	                      end_date=end_date)
+	start_date = request.form.get('start_date', '')
+	end_date = request.form.get('end_date', '')
+	
+	bbl_result1 = address_to_bbl_geoclient(
+		request.form.get('house_number1', ''),
+		request.form.get('street1', ''),
+		request.form.get('borough1', '')
+	)
+	bbl1 = parse_bbl(bbl_result1['bbl'])
+	
+	bbl_result2 = address_to_bbl_geoclient(
+		request.form.get('house_number2', ''),
+		request.form.get('street2', ''),
+		request.form.get('borough2', '')
+	)
+	bbl2 = parse_bbl(bbl_result2['bbl'])
+	
+	data1 = get_bbl_data(bbl1['borough_code'], bbl1['block_code'], bbl1['lot_code'], start_date, end_date)
+	data2 = get_bbl_data(bbl2['borough_code'], bbl2['block_code'], bbl2['lot_code'], start_date, end_date)
+	
+	return render_template("compare.html", data1=data1, data2=data2, start_date=start_date, end_date=end_date)
 
 
 @app.route('/trends/<bbl>')
 def trends(bbl):
 	"""
-	Time-series trends view for a BBL
-	Returns JSON data for charting
-	
-	FLASK REFERENCES:
-	- URL variable extraction: https://flask.palletsprojects.com/en/2.3.x/quickstart/#variable-rules
-	- Query parameters (request.args): https://flask.palletsprojects.com/en/2.3.x/quickstart/#the-request-object
-	- JSON responses with jsonify(): https://flask.palletsprojects.com/en/2.3.x/quickstart/#apis-with-json
-	- HTTP status codes: https://flask.palletsprojects.com/en/2.3.x/quickstart/#about-responses
-	
-	PATTERN: JSON API endpoint
-	This route returns JSON data instead of HTML templates. Used by JavaScript
-	fetch() calls on the frontend to dynamically load chart data.
+	Get time-series data for charts
 	"""
 	bbl_parsed = parse_bbl(bbl)
-	if not bbl_parsed:
-		# Reference: Return JSON error with HTTP 400 status
-		# https://flask.palletsprojects.com/en/2.3.x/quickstart/#about-responses
-		return jsonify({'error': 'Invalid BBL format'}), 400
-	
-	# Reference: request.args.get() for query parameters with defaults
-	# https://flask.palletsprojects.com/en/2.3.x/api/#flask.Request.args
+	start_date = request.args.get('start_date', '2024-01-01')
+	end_date = request.args.get('end_date', '2024-12-31')
 	metric_type = request.args.get('type', 'service_requests')
-	start_date = request.args.get('start_date', '')
-	end_date = request.args.get('end_date', '')
-	
-	if not end_date:
-		end_date = datetime.now().strftime('%Y-%m-%d')
-	if not start_date:
-		start_date = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d')
 	
 	data = get_time_series_data(
 		bbl_parsed['borough_code'],
@@ -617,38 +494,18 @@ def trends(bbl):
 		metric_type
 	)
 	
-	# Reference: jsonify() converts Python dict to JSON response
-	# https://flask.palletsprojects.com/en/2.3.x/api/#flask.json.jsonify
 	return jsonify(data)
 
 
 @app.route('/export/<bbl>')
 def export_csv(bbl):
 	"""
-	Export analytics data as CSV
-	
-	FLASK REFERENCES:
-	- URL variables: https://flask.palletsprojects.com/en/2.3.x/quickstart/#variable-rules
-	- Query parameters: https://flask.palletsprojects.com/en/2.3.x/quickstart/#the-request-object
-	- make_response() for custom responses: https://flask.palletsprojects.com/en/2.3.x/quickstart/#about-responses
-	- Response headers: https://flask.palletsprojects.com/en/2.3.x/api/#flask.Response
-	- abort() for error handling: https://flask.palletsprojects.com/en/2.3.x/quickstart/#redirects-and-errors
-	
-	PATTERN: CSV File Download
-	This route generates a CSV file dynamically and sends it as a download.
-	Uses make_response() with custom headers to trigger browser download.
+	Export data as CSV
 	"""
 	bbl_parsed = parse_bbl(bbl)
-	if not bbl_parsed:
-		# Reference: abort() raises HTTP error
-		# https://flask.palletsprojects.com/en/2.3.x/api/#flask.abort
-		abort(400, "Invalid BBL format")
-	
-	# Reference: request.args for query parameters
-	# https://flask.palletsprojects.com/en/2.3.x/api/#flask.Request.args
 	start_date = request.args.get('start_date', '')
 	end_date = request.args.get('end_date', '')
-	export_type = request.args.get('type', 'complaints')  # 'complaints' or 'sales'
+	export_type = request.args.get('type', 'complaints')
 	
 	data = get_bbl_data(
 		bbl_parsed['borough_code'],
@@ -661,26 +518,19 @@ def export_csv(bbl):
 	if not data:
 		abort(404)
 	
-	# Create CSV using Python's csv module
 	output = io.StringIO()
+	writer = csv.writer(output)
 	
 	if export_type == 'complaints':
-		writer = csv.writer(output)
 		writer.writerow(['Complaint Type', 'Total Count', 'Active Count'])
 		for ct in data['complaint_types']:
 			writer.writerow([ct['type'], ct['count'], ct['active_count']])
-	else:  # sales
-		writer = csv.writer(output)
+	elif export_type == 'sales':
 		writer.writerow(['Address', 'Sale Price', 'Sale Date'])
 		for sale in data['sales']:
 			writer.writerow([sale['address'], sale['price'], sale['date']])
 	
-	# Reference: make_response() creates custom Response object
-	# https://flask.palletsprojects.com/en/2.3.x/api/#flask.make_response
 	response = make_response(output.getvalue())
-	
-	# Reference: Setting response headers for file download
-	# https://flask.palletsprojects.com/en/2.3.x/api/#flask.Response.headers
 	response.headers['Content-Type'] = 'text/csv'
 	response.headers['Content-Disposition'] = f'attachment; filename={bbl}_{export_type}.csv'
 	
@@ -689,7 +539,9 @@ def export_csv(bbl):
 
 @app.route('/bookmark/<bbl>', methods=['POST'])
 def bookmark(bbl):
-	"""Add or remove BBL from bookmarks"""
+	"""
+	Add or remove BBL from bookmarks
+	"""
 	if 'bookmarks' not in session:
 		session['bookmarks'] = []
 	
@@ -710,7 +562,9 @@ def bookmark(bbl):
 
 @app.route('/bookmarks')
 def view_bookmarks():
-	"""View all bookmarked BBLs"""
+	"""
+	View all bookmarked BBLs
+	"""
 	bookmarks = session.get('bookmarks', [])
 	
 	bookmark_data = []

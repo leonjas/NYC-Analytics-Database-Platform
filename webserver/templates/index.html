@@ -1,147 +1,99 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NYC 311 & Property Analytics</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-family: Arial, sans-serif;
+            background-color: #336699;
+            margin: 0;
             padding: 20px;
         }
         
         .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 50px;
-            max-width: 700px;
-            width: 100%;
+            background-color: white;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 40px;
+            border: 1px solid #ccc;
         }
         
         h1 {
-            font-size: 2.5em;
             color: #333;
-            margin-bottom: 10px;
             text-align: center;
+            margin-bottom: 10px;
         }
         
         .subtitle {
             color: #666;
             text-align: center;
-            margin-bottom: 40px;
-            font-size: 1.1em;
+            margin-bottom: 30px;
         }
         
-        .search-box {
-            margin-bottom: 30px;
+        .form-group {
+            margin-bottom: 20px;
         }
         
         label {
             display: block;
-            font-weight: 600;
-            color: #444;
-            margin-bottom: 8px;
-            font-size: 0.95em;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
         }
         
         input[type="text"],
-        input[type="date"] {
+        input[type="date"],
+        select {
             width: 100%;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 1em;
-            transition: all 0.3s;
-            font-family: inherit;
+            padding: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
         }
         
-        input[type="text"]:focus,
-        input[type="date"]:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        
-        .date-filters {
+        .date-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
-            margin-top: 20px;
         }
         
         .hint {
-            font-size: 0.85em;
+            font-size: 12px;
             color: #888;
             margin-top: 5px;
         }
         
         button {
             width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px;
+            background-color: #336699;
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 1.1em;
-            font-weight: 600;
+            font-size: 16px;
+            font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin-top: 20px;
+            margin-top: 10px;
         }
         
         button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        }
-        
-        button:active {
-            transform: translateY(0);
+            background-color: #224466;
         }
         
         .links {
-            margin-top: 30px;
-            padding-top: 30px;
-            border-top: 2px solid #f0f0f0;
-            display: flex;
-            justify-content: center;
-            gap: 20px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
         }
         
         .links a {
-            color: #667eea;
+            color: #336699;
             text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s;
+            margin: 0 10px;
         }
         
         .links a:hover {
-            color: #764ba2;
             text-decoration: underline;
-        }
-        
-        .example {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 10px;
-            font-size: 0.9em;
-            color: #555;
-        }
-        
-        .example strong {
-            color: #667eea;
         }
     </style>
 </head>
@@ -151,36 +103,21 @@
         <p class="subtitle">311 Service Requests & Property Sales Dashboard</p>
         
         <form action="/search" method="POST">
-            <div class="search-box">
+            <div class="form-group">
                 <label for="house_number">House Number</label>
-                <input 
-                    type="text" 
-                    id="house_number" 
-                    name="house_number" 
-                    placeholder="e.g., 120"
-                    required
-                >
+                <input type="text" id="house_number" name="house_number" 
+                       placeholder="e.g., 120" required>
             </div>
             
-            <div class="search-box">
+            <div class="form-group">
                 <label for="street">Street Name</label>
-                <input 
-                    type="text" 
-                    id="street" 
-                    name="street" 
-                    placeholder="e.g., BROADWAY"
-                    required
-                >
+                <input type="text" id="street" name="street" 
+                       placeholder="e.g., BROADWAY" required>
             </div>
             
-            <div class="search-box">
+            <div class="form-group">
                 <label for="borough">Borough</label>
-                <select 
-                    id="borough" 
-                    name="borough"
-                    required
-                    style="width: 100%; padding: 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1em; font-family: inherit;"
-                >
+                <select id="borough" name="borough" required>
                     <option value="">Select a borough...</option>
                     <option value="Manhattan">Manhattan</option>
                     <option value="Brooklyn">Brooklyn</option>
@@ -188,15 +125,14 @@
                     <option value="Bronx">Bronx</option>
                     <option value="Staten Island">Staten Island</option>
                 </select>
-                <div class="hint">Select the NYC borough</div>
             </div>
             
-            <div class="date-filters">
-                <div>
+            <div class="date-row">
+                <div class="form-group">
                     <label for="start_date">Start Date (Optional)</label>
                     <input type="date" id="start_date" name="start_date">
                 </div>
-                <div>
+                <div class="form-group">
                     <label for="end_date">End Date (Optional)</label>
                     <input type="date" id="end_date" name="end_date">
                 </div>
@@ -205,6 +141,11 @@
             
             <button type="submit">Search</button>
         </form>
+        
+        <div class="links">
+            <a href="/bookmarks">View Bookmarks</a>
+            <a href="/compare">Compare Addresses</a>
+        </div>
     </div>
 </body>
 </html>

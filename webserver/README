@@ -1,0 +1,71 @@
+COMS W4111 Project 1 Part 3 - README
+
+1. PostgreSQL Account
+   PostgreSQL Username: ly2665
+   Database Name: proj1part2
+   Server: 34.139.8.30:5432
+
+2. Web Application URL
+   http://35.231.81.235:8111
+
+3. Implementation Status
+
+   Parts Implemented from Original Proposal:
+   - Property search by address (house number, street, borough)
+   - Service request analytics for properties (311 complaints)
+   - Property sales history and trends
+   - Time-based filtering (date range selection)
+   - Interactive charts for complaint types and trends over time
+   - Bookmarking system for saving favorite properties
+   - Property comparison feature (side-by-side comparison)
+   - BBL-based geographic area lookup using NYC Geoclient API
+   - Export functionality for sales and complaint data (CSV)
+
+   Parts Not Implemented:
+   - None - All proposed features were successfully implemented
+
+   Additional Features Implemented:
+   - Chart.js integration for pie charts showing complaint type distribution
+   - Dynamic trend charts with gap-filling for months with no data
+   - Median calculation for sales trends to handle outliers
+
+4. Two Most Interesting Database Operations
+
+   Page 1: Analytics Dashboard (/analytics/<bbl>)
+   
+   What the page is used for:
+   This page displays comprehensive analytics for a specific property. Users can view service requests (311 complaints), property sales history, and trends over time with customizable date ranges.
+   
+   How inputs relate to database operations:
+   - User enters an address (house number, street, borough) on the home page
+   - The address is converted to a BBL (Borough-Block-Lot) via NYC Geoclient API
+   - The BBL is parsed into borough_code, block_code, and lot_code
+   - Optional date range inputs (start_date, end_date) filter the results
+   - These inputs are used in multiple database queries:
+     * JOIN geographic_area table to get property details
+     * JOIN service_request and complaint_type tables with date filtering
+     * JOIN sale table to get transaction history within the date range
+     * GROUP BY queries to aggregate complaint types by count
+     * ORDER BY with LIMIT to show most recent transactions
+   
+   Why it's interesting:
+   This page is interesting because it combines multiple complex database operations in parallel. It uses JOINs across 5+ tables, aggregations with GROUP BY, temporal filtering with date ranges, and handles missing data gracefully. The median calculation for sales trends requires sorting and window functions to handle price outliers better than simple averages. The page demonstrates efficient querying without N+1 problems by batching related data retrieval.
+
+   Page 2: Property Comparison (/compare)
+   
+   What the page is used for:
+   This page allows users to compare two properties side-by-side, viewing their complaint statistics, sales history, and geographic information simultaneously.
+   
+   How inputs relate to database operations:
+   - Users enter two addresses (house number, street, borough for each property)
+   - Each address is converted to a BBL via NYC Geoclient API
+   - The same database query pattern runs twice in parallel for both properties:
+     * Parse BBL into borough_code, block_code, lot_code
+     * Query geographic_area table for address and location details
+     * JOIN service_request table and aggregate complaint types
+     * JOIN sale table and retrieve transaction history
+     * Calculate statistics (total complaints, total sales, price ranges)
+   - Results are displayed side-by-side for easy comparison
+   
+   Why it's interesting:
+   This page is interesting because it demonstrates query reusability and performance optimization. The same complex query pattern (get_bbl_data function) executes twice with different parameters, showing modular code design. It highlights the importance of proper indexing on (borough_code, block_code, lot_code) since comparing properties doubles the database load. The parallel execution pattern and side-by-side presentation makes it easy to identify patterns like neighborhood trends or price disparities between nearby properties.

@@ -1,232 +1,155 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Compare BBLs - NYC Analytics</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f5f7fa;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
             padding: 20px;
         }
         
         .container {
-            max-width: 1600px;
+            max-width: 1400px;
             margin: 0 auto;
         }
         
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #336699;
             color: white;
-            padding: 30px 40px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
         }
         
         .header h1 {
-            font-size: 2.2em;
+            margin: 0;
         }
         
         .back-link {
             display: inline-block;
-            color: #667eea;
+            color: #336699;
+            background-color: white;
             text-decoration: none;
-            margin-bottom: 20px;
-            font-weight: 600;
-            background: white;
-            padding: 12px 25px;
-            border-radius: 8px;
-        }
-        
-        .back-link:hover {
-            background: #f8f9fa;
+            padding: 10px 20px;
+            margin-bottom: 15px;
+            border: 1px solid #336699;
         }
         
         .search-form {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
         }
         
-        .form-grid {
+        .form-row {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr auto;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 15px;
-            align-items: end;
+            margin-bottom: 20px;
         }
         
-        .form-group {
-            display: flex;
-            flex-direction: column;
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
         }
         
-        label {
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #333;
-        }
-        
-        input[type="text"],
-        input[type="date"] {
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
-        }
-        
-        input[type="text"]:focus,
-        input[type="date"]:focus {
-            outline: none;
-            border-color: #667eea;
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
         }
         
         button {
             padding: 12px 30px;
-            background: #667eea;
+            background-color: #336699;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-weight: 600;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
+            width: 100%;
         }
         
         button:hover {
-            background: #764ba2;
-            transform: translateY(-2px);
+            background-color: #224466;
         }
         
-        .comparison-grid {
+        .comparison {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 30px;
+            gap: 20px;
         }
         
-        .bbl-column {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-        
-        .bbl-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .column {
+            background-color: white;
             padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 25px;
+            border: 1px solid #ccc;
         }
         
-        .bbl-header h2 {
-            font-size: 1.8em;
-            margin-bottom: 8px;
+        .column-header {
+            background-color: #336699;
+            color: white;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .column-header h2 {
+            margin: 0;
         }
         
         .stat-box {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            border-left: 4px solid #667eea;
+            background-color: #e6f2ff;
+            padding: 15px;
+            margin-bottom: 10px;
         }
         
         .stat-number {
-            font-size: 2em;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .stat-label {
-            color: #666;
-            font-size: 1em;
-        }
-        
-        .property-info {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-        }
-        
-        .property-info div {
-            margin: 8px 0;
-            color: #555;
-        }
-        
-        .property-info strong {
-            color: #333;
+            font-size: 24px;
+            font-weight: bold;
         }
         
         .section-title {
-            font-size: 1.3em;
-            color: #333;
-            margin: 25px 0 15px 0;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e9ecef;
-        }
-        
-        .complaint-list {
-            max-height: 300px;
-            overflow-y: auto;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0 10px 0;
+            border-bottom: 2px solid #336699;
+            padding-bottom: 5px;
         }
         
         .complaint-item {
-            padding: 12px;
-            border-bottom: 1px solid #e9ecef;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        .complaint-name {
-            font-weight: 600;
-            color: #333;
-            flex: 1;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
         }
         
         .count-badge {
-            background: #667eea;
+            background-color: #336699;
             color: white;
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-size: 0.85em;
-            font-weight: 600;
+            padding: 3px 10px;
+            float: right;
         }
         
         .error {
-            background: #fee;
-            border: 2px solid #fcc;
-            color: #c33;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
+            background-color: #ffeeee;
+            border: 1px solid #ffcccc;
+            color: #cc0000;
+            padding: 15px;
+            margin: 15px 0;
         }
         
-        .no-data {
-            text-align: center;
-            padding: 30px;
-            color: #999;
-            font-style: italic;
+        .view-link {
+            display: inline-block;
+            background-color: #336699;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            margin-top: 15px;
         }
         
-        @media (max-width: 1024px) {
-            .comparison-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
+        .view-link:hover {
+            background-color: #224466;
         }
     </style>
 </head>
@@ -236,35 +159,47 @@
         
         <div class="header">
             <h1>Compare Addresses Side-by-Side</h1>
-            {% if bbl1_info %}
-            <p style="margin-top: 10px; font-size: 1.1em;">Comparing {{ bbl1_info.bbl }} ({{ bbl1_info.borough_name }}) with another address</p>
-            {% endif %}
         </div>
         
         <div class="search-form">
             <form method="POST" action="/compare">
-                {% if bbl1_info %}
-                <input type="hidden" name="bbl1_prefilled" value="{{ bbl1_info.bbl }}">
-                <h3 style="margin-bottom: 15px; color: #28a745;">First Address (Pre-filled)</h3>
-                <p style="margin-bottom: 20px; color: #666;">BBL {{ bbl1_info.bbl }} - {{ bbl1_info.borough_name }}</p>
+                <h3>First Address</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>House Number</label>
+                        <input type="text" name="house_number1" value="{{ house_number1 }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Street Name</label>
+                        <input type="text" name="street1" value="{{ street1 }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Borough</label>
+                        <select name="borough1" required>
+                            <option value="">Select...</option>
+                            <option value="Manhattan" {% if borough1 == 'Manhattan' %}selected{% endif %}>Manhattan</option>
+                            <option value="Brooklyn" {% if borough1 == 'Brooklyn' %}selected{% endif %}>Brooklyn</option>
+                            <option value="Queens" {% if borough1 == 'Queens' %}selected{% endif %}>Queens</option>
+                            <option value="Bronx" {% if borough1 == 'Bronx' %}selected{% endif %}>Bronx</option>
+                            <option value="Staten Island" {% if borough1 == 'Staten Island' %}selected{% endif %}>Staten Island</option>
+                        </select>
+                    </div>
+                </div>
                 
-                <h3 style="margin-bottom: 20px;">Enter Second Address to Compare</h3>
-                {% else %}
-                <h3 style="margin-bottom: 20px;">First Address</h3>
-                <div class="form-grid">
+                <h3>Second Address</h3>
+                <div class="form-row">
                     <div class="form-group">
-                        <label for="house_number1">House Number</label>
-                        <input type="text" id="house_number1" name="house_number1" placeholder="e.g., 120" required>
+                        <label>House Number</label>
+                        <input type="text" name="house_number2" required>
                     </div>
                     <div class="form-group">
-                        <label for="street1">Street Name</label>
-                        <input type="text" id="street1" name="street1" placeholder="e.g., BROADWAY" required>
+                        <label>Street Name</label>
+                        <input type="text" name="street2" required>
                     </div>
                     <div class="form-group">
-                        <label for="borough1">Borough</label>
-                        <select id="borough1" name="borough1" required 
-                                style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em;">
-                            <option value="">Select borough...</option>
+                        <label>Borough</label>
+                        <select name="borough2" required>
+                            <option value="">Select...</option>
                             <option value="Manhattan">Manhattan</option>
                             <option value="Brooklyn">Brooklyn</option>
                             <option value="Queens">Queens</option>
@@ -274,49 +209,18 @@
                     </div>
                 </div>
                 
-                <h3 style="margin: 30px 0 20px 0;">Second Address</h3>
-                {% endif %}
-                
-                <div class="form-grid">
+                <div class="form-row">
                     <div class="form-group">
-                        <label for="house_number2">House Number</label>
-                        <input type="text" id="house_number2" name="house_number2" placeholder="e.g., 350" required>
+                        <label>Start Date (Optional)</label>
+                        <input type="date" name="start_date" value="{{ start_date }}">
                     </div>
                     <div class="form-group">
-                        <label for="street2">Street Name</label>
-                        <input type="text" id="street2" name="street2" placeholder="e.g., 5TH AVENUE" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="borough2">Borough</label>
-                        <select id="borough2" name="borough2" required 
-                                style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em;">
-                            <option value="">Select borough...</option>
-                            <option value="Manhattan">Manhattan</option>
-                            <option value="Brooklyn">Brooklyn</option>
-                            <option value="Queens">Queens</option>
-                            <option value="Bronx">Bronx</option>
-                            <option value="Staten Island">Staten Island</option>
-                        </select>
+                        <label>End Date (Optional)</label>
+                        <input type="date" name="end_date" value="{{ end_date }}">
                     </div>
                 </div>
                 
-                {% if bbl1_info %}
-                <input type="hidden" name="start_date" value="{{ start_date }}">
-                <input type="hidden" name="end_date" value="{{ end_date }}">
-                {% else %}
-                <div class="form-grid" style="margin-top: 20px;">
-                    <div class="form-group">
-                        <label for="start_date">Start Date (Optional)</label>
-                        <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="end_date">End Date (Optional)</label>
-                        <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
-                    </div>
-                </div>
-                {% endif %}
-                
-                <button type="submit" style="margin-top: 20px; width: 100%;">Compare</button>
+                <button type="submit">Compare</button>
             </form>
         </div>
         
@@ -325,10 +229,10 @@
                 <strong>Error:</strong> {{ error }}
             </div>
         {% elif data1 and data2 %}
-            <div class="comparison-grid">
-                <!-- BBL 1 Column -->
-                <div class="bbl-column">
-                    <div class="bbl-header">
+            <div class="comparison">
+                <!-- BBL 1 -->
+                <div class="column">
+                    <div class="column-header">
                         <h2>{{ data1.bbl }}</h2>
                         <div>{{ data1.borough_name }}</div>
                     </div>
@@ -336,19 +240,19 @@
                     <div class="section-title">Service Requests</div>
                     <div class="stat-box">
                         <div class="stat-number">{{ '{:,}'.format(data1.total_requests) }}</div>
-                        <div class="stat-label">Total Requests</div>
+                        <div>Total Requests</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-number">{{ '{:,}'.format(data1.total_active) }}</div>
-                        <div class="stat-label">Active Requests</div>
+                        <div>Active Requests</div>
                     </div>
                     
                     {% if data1.complaint_types %}
                     <div class="section-title">Top Complaints</div>
-                    <div class="complaint-list">
+                    <div>
                         {% for ct in data1.complaint_types[:10] %}
                         <div class="complaint-item">
-                            <div class="complaint-name">{{ ct.type }}</div>
+                            <span>{{ ct.type }}</span>
                             <span class="count-badge">{{ ct.count }}</span>
                         </div>
                         {% endfor %}
@@ -358,33 +262,26 @@
                     <div class="section-title">Property Sales</div>
                     <div class="stat-box">
                         <div class="stat-number">{{ '{:,}'.format(data1.num_sales) }}</div>
-                        <div class="stat-label">Total Sales</div>
+                        <div>Total Sales</div>
                     </div>
                     {% if data1.num_sales > 0 %}
                     <div class="stat-box">
                         <div class="stat-number">${{ '{:,.0f}'.format(data1.median_sale_price) }}</div>
-                        <div class="stat-label">Median Sale Price</div>
+                        <div>Median Sale Price</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-number">${{ '{:,.0f}'.format(data1.min_sale_price) }} - ${{ '{:,.0f}'.format(data1.max_sale_price) }}</div>
-                        <div class="stat-label">Price Range</div>
+                        <div>Price Range</div>
                     </div>
-                    {% else %}
-                    <div class="no-data">No sales data</div>
                     {% endif %}
                     
-                    <div style="margin-top: 25px;">
-                        <a href="/analytics/{{ data1.bbl }}?start_date={{ start_date }}&end_date={{ end_date }}" 
-                           style="display: inline-block; background: #667eea; color: white; padding: 12px 25px; 
-                                  border-radius: 8px; text-decoration: none; font-weight: 600;">
-                            View Full Analytics →
-                        </a>
-                    </div>
+                    <a href="/analytics/{{ data1.bbl }}?start_date={{ start_date }}&end_date={{ end_date }}" 
+                       class="view-link">View Full Analytics</a>
                 </div>
                 
-                <!-- BBL 2 Column -->
-                <div class="bbl-column">
-                    <div class="bbl-header">
+                <!-- BBL 2 -->
+                <div class="column">
+                    <div class="column-header">
                         <h2>{{ data2.bbl }}</h2>
                         <div>{{ data2.borough_name }}</div>
                     </div>
@@ -392,19 +289,19 @@
                     <div class="section-title">Service Requests</div>
                     <div class="stat-box">
                         <div class="stat-number">{{ '{:,}'.format(data2.total_requests) }}</div>
-                        <div class="stat-label">Total Requests</div>
+                        <div>Total Requests</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-number">{{ '{:,}'.format(data2.total_active) }}</div>
-                        <div class="stat-label">Active Requests</div>
+                        <div>Active Requests</div>
                     </div>
                     
                     {% if data2.complaint_types %}
                     <div class="section-title">Top Complaints</div>
-                    <div class="complaint-list">
+                    <div>
                         {% for ct in data2.complaint_types[:10] %}
                         <div class="complaint-item">
-                            <div class="complaint-name">{{ ct.type }}</div>
+                            <span>{{ ct.type }}</span>
                             <span class="count-badge">{{ ct.count }}</span>
                         </div>
                         {% endfor %}
@@ -414,28 +311,21 @@
                     <div class="section-title">Property Sales</div>
                     <div class="stat-box">
                         <div class="stat-number">{{ '{:,}'.format(data2.num_sales) }}</div>
-                        <div class="stat-label">Total Sales</div>
+                        <div>Total Sales</div>
                     </div>
                     {% if data2.num_sales > 0 %}
                     <div class="stat-box">
                         <div class="stat-number">${{ '{:,.0f}'.format(data2.median_sale_price) }}</div>
-                        <div class="stat-label">Median Sale Price</div>
+                        <div>Median Sale Price</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-number">${{ '{:,.0f}'.format(data2.min_sale_price) }} - ${{ '{:,.0f}'.format(data2.max_sale_price) }}</div>
-                        <div class="stat-label">Price Range</div>
+                        <div>Price Range</div>
                     </div>
-                    {% else %}
-                    <div class="no-data">No sales data</div>
                     {% endif %}
                     
-                    <div style="margin-top: 25px;">
-                        <a href="/analytics/{{ data2.bbl }}?start_date={{ start_date }}&end_date={{ end_date }}" 
-                           style="display: inline-block; background: #667eea; color: white; padding: 12px 25px; 
-                                  border-radius: 8px; text-decoration: none; font-weight: 600;">
-                            View Full Analytics →
-                        </a>
-                    </div>
+                    <a href="/analytics/{{ data2.bbl }}?start_date={{ start_date }}&end_date={{ end_date }}" 
+                       class="view-link">View Full Analytics</a>
                 </div>
             </div>
         {% endif %}

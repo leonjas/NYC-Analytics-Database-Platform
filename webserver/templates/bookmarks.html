@@ -1,20 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Bookmarks - NYC Analytics</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f5f7fa;
-            padding: 40px 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
         }
         
         .container {
@@ -23,88 +17,56 @@
         }
         
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #336699;
             color: white;
-            padding: 30px 40px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
         }
         
         .header h1 {
-            font-size: 2.2em;
+            margin: 0;
         }
         
         .back-link {
             display: inline-block;
-            color: #667eea;
+            color: #336699;
+            background-color: white;
             text-decoration: none;
-            margin-bottom: 20px;
-            font-weight: 600;
-            background: white;
-            padding: 12px 25px;
-            border-radius: 8px;
-        }
-        
-        .back-link:hover {
-            background: #f8f9fa;
+            padding: 10px 20px;
+            margin-bottom: 15px;
+            border: 1px solid #336699;
         }
         
         .bookmarks-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px;
-            margin-top: 30px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
         }
         
         .bookmark-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            transition: all 0.3s;
-        }
-        
-        .bookmark-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-        }
-        
-        .bbl-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 20px;
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ccc;
         }
         
         .bbl-code {
-            font-size: 1.5em;
-            font-weight: 700;
-            color: #667eea;
+            font-size: 20px;
+            font-weight: bold;
+            color: #336699;
+            margin-bottom: 10px;
         }
         
-        .borough-badge {
-            background: #667eea;
+        .borough {
+            background-color: #336699;
             color: white;
-            padding: 5px 12px;
-            border-radius: 5px;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
-        
-        .stats-summary {
-            margin: 15px 0;
+            padding: 5px 10px;
+            display: inline-block;
+            margin-bottom: 15px;
         }
         
         .stat-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #e9ecef;
-        }
-        
-        .stat-item:last-child {
-            border-bottom: none;
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
         }
         
         .stat-label {
@@ -112,43 +74,57 @@
         }
         
         .stat-value {
-            font-weight: 600;
-            color: #333;
+            font-weight: bold;
+            float: right;
         }
         
         .actions {
-            margin-top: 20px;
-            display: flex;
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
         }
         
         .btn {
-            flex: 1;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 10px;
             text-align: center;
             text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s;
+            font-weight: bold;
+            border: 1px solid #ccc;
         }
         
-        .btn-primary {
-            background: #667eea;
+        .btn-view {
+            background-color: #336699;
             color: white;
         }
         
-        .btn-primary:hover {
-            background: #764ba2;
+        .btn-remove {
+            background-color: white;
+            color: #cc0000;
+            border-color: #cc0000;
         }
         
-        .btn-secondary {
-            background: #f8f9fa;
-            color: #667eea;
-            border: 2px solid #667eea;
+        .empty {
+            text-align: center;
+            padding: 50px;
+            background-color: white;
+            border: 1px solid #ccc;
         }
         
-        .btn-secondary:hover {
-            background: #667eea;
+        .empty-icon {
+            font-size: 48px;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">← Back to Home</a>
+        
+        <div class="header">
+            <h1>My Bookmarks</h1>
+        </div>
             color: white;
         }
         
@@ -188,9 +164,65 @@
         
         <div class="header">
             <h1>📑 My Bookmarks</h1>
-            <p style="margin-top: 10px; opacity: 0.9;">
-                {{ bookmarks|length }} bookmarked location{% if bookmarks|length != 1 %}s{% endif %}
-            </p>
+                    
+        {% if bookmarks %}
+            <div class="bookmarks-grid">
+                {% for bbl_data in bookmarks %}
+                <div class="bookmark-card">
+                    <div class="bbl-code">{{ bbl_data.bbl }}</div>
+                    <div class="borough">{{ bbl_data.borough_name }}</div>
+                    
+                    <div>
+                        <div class="stat-item">
+                            <span class="stat-label">Service Requests</span>
+                            <span class="stat-value">{{ '{:,}'.format(bbl_data.total_requests) }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Active Requests</span>
+                            <span class="stat-value">{{ '{:,}'.format(bbl_data.total_active) }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Property Sales</span>
+                            <span class="stat-value">{{ '{:,}'.format(bbl_data.num_sales) }}</span>
+                        </div>
+                        {% if bbl_data.num_sales > 0 %}
+                        <div class="stat-item">
+                            <span class="stat-label">Median Sale Price</span>
+                            <span class="stat-value">${{ '{:,.0f}'.format(bbl_data.median_sale_price) }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="actions">
+                        <a href="/analytics/{{ bbl_data.bbl }}" class="btn btn-view">View</a>
+                        <button class="btn btn-remove" onclick="removeBookmark('{{ bbl_data.bbl }}')">Remove</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty">
+                <div class="empty-icon">📑</div>
+                <h2>No Bookmarks Yet</h2>
+                <p>Start searching for addresses and bookmark your favorites!</p>
+                <a href="/" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #336699; color: white; text-decoration: none;">Go to Search</a>
+            </div>
+        {% endif %}
+    </div>
+    
+    <script>
+        function removeBookmark(bbl) {
+            if (confirm('Remove this bookmark?')) {
+                fetch('/bookmark/' + bbl, { method: 'POST' })
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        window.location.reload();
+                    });
+            }
+        }
+    </script>
+</body>
+</html>
         </div>
         
         {% if bookmarks %}
