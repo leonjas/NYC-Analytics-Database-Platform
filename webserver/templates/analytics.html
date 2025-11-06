@@ -161,7 +161,8 @@
         {% if first_address %}
         {% set parts = first_address.split(none, 1) %}
         {% if parts|length >= 2 %}
-        <a href="/compare?house_number1={{ parts[0] }}&street1={{ parts[1] }}&borough1={{ data.borough_name }}&start_date={{ start_date }}&end_date={{ end_date }}">Compare</a>
+        {% set street_clean = parts[1].split(',')[0] %}
+        <a href="/compare?house_number1={{ parts[0] }}&street1={{ street_clean }}&borough1={{ data.borough_name }}&start_date={{ start_date }}&end_date={{ end_date }}">Compare</a>
         {% else %}
         <a href="/compare?borough1={{ data.borough_name }}&start_date={{ start_date }}&end_date={{ end_date }}">Compare</a>
         {% endif %}
