@@ -1,6 +1,8 @@
 # Data files - already in Google Cloud database
 *.csv
 *.sql
+*.xlsx
+*.pdf
 clean_csv_files.py
 DATA_PIPELINE_SUMMARY.md
 
