@@ -81,18 +81,16 @@ def address_to_bbl_geoclient(house_number, street, borough):
 	Returns BBL result or None if not found
 	"""
 	API_KEY = os.environ.get('NYC_GEOCLIENT_API_KEY', 'dfb4a2fde414449cb4f86b99552e34c6')
-	url = "https://api.nyc.gov/geo/geoclient/v1/address.json"
+	url = "https://api.nyc.gov/geoclient/v2/address.json"
 	
-	headers = {
-		'Ocp-Apim-Subscription-Key': API_KEY
-	}
 	params = {
 		'houseNumber': house_number,
 		'street': street,
-		'borough': borough
+		'borough': borough,
+		'key': API_KEY
 	}
 	
-	response = requests.get(url, headers=headers, params=params, timeout=5)
+	response = requests.get(url, params=params, timeout=5)
 	if response.status_code != 200:
 		return None
 	
