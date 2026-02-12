@@ -41,4 +41,6 @@ Users follow the same input flow as the Analytics page, but enter two addresses 
 4. **Compare Properties**: Enter two addresses to compare their statistics side-by-side
 5. **Export Data**: Download CSV files of service requests and sales data
 
+![Demo Screenshot](demo.jpg)
+
 Watch the platform demo video: [Database Platform Demo.mov](Database%20Platform%20Demo.mov)
